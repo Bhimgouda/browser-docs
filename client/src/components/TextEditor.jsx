@@ -23,15 +23,54 @@ export default function TextEditor() {
 
     // Step 1: Connecting to socket.io backend server
     useEffect(()=>{
+
+        
+
         const socketServer = io("http://localhost:7000")
         setSocket(socketServer)
 
         return ()=>{
-            socketServer.disconnect();
+            socketServer.disconnect();  // RETURN IS BASICALLY USED TO DEFINE COMPONENT WILL UNMOUNT FUNCTION (for cleanup code)
         }
     },[])
 
 
+    // Step 2: This useEffect is dependent on quill,socket and this listens if there was any text change on quill
+    // and then on every text change it sends a req to server with the changed data (which is delta in this case)
+    useEffect(()=>{
+        if(socket==null||quill==null) return;
+
+        const handler = (delta,oldData,source)=>{
+            if(source!=="user") return;
+            socket.emit("send-changes", delta)
+        }
+
+        quill.on("text-change",handler)
+
+        return ()=>{
+            quill.off("text-change", handler)
+        }
+    },[socket,quill])
+
+
+    // Step 3: This useEffect then listens to the data received from the server and update the quills content.
+    useEffect(()=>{
+        if(socket==null||quill==null) return;
+
+        const handler = (delta)=>{
+            quill.updateContents(delta)
+        }
+
+        socket.on("receive-changes",handler)
+
+        return ()=>{
+            quill.off("receive-changes", handler)
+        }
+    },[socket,quill])
+
+  // This is how step 1, step 2, step 3 and the server side code to receive the text-change data from 1 client and then save it to DB and send back the changed data to all the other clients
+  // so that the content can be updated there simultaneously wheneven any change is made to a file
+  // This is how the changes can be detected on multiple clients browser whenever a change is made by any one
 
     const wrapperRef = useCallback(wrapper => {
         if (wrapper == null) return
