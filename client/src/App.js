@@ -1,7 +1,10 @@
+import TextEditor from './components/TextEditor';
 import './App.css';
 
 function App() {
-  return "Hi"
+  return (
+    <TextEditor/>
+  )
 }
 
 export default App;
