@@ -2,9 +2,7 @@ import Quill from "quill"
 import "quill/dist/quill.snow.css"
 import React, { useCallback, useEffect } from 'react'
 import { useState } from "react"
-import { useParams } from "react-router-dom"
-import {io} from "socket.io-client"
-
+import { useNavigate, useParams } from "react-router-dom"
 
 const TOOLBAR_OPTIONS = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
@@ -18,30 +16,21 @@ const TOOLBAR_OPTIONS = [
     ["clean"],
   ]
 
-export default function TextEditor() {
-    const [socket,setSocket] = useState()
+export default function TextEditor({socket}) {
     const [quill,setQuill] = useState()
-
     const {id:documentId} = useParams()
-
-    // Step 1: Connecting to socket.io backend server
-    useEffect(()=>{
-        const socketServer = io("")
-        setSocket(socketServer)
-
-        return ()=>{
-            socketServer.disconnect();  // RETURN IS BASICALLY USED TO DEFINE COMPONENT WILL UNMOUNT FUNCTION (for cleanup code)
-        }
-    },[])
-
+    const navigate = useNavigate()
 
     useEffect(()=>{
-        if(socket==null||quill==null) return;
+        if(socket==null || socket === undefined || quill==null) return;
 
         socket.emit('get-document', documentId)
 
         socket.once('load-document',document=>{
-            quill.setContents(document);
+            if(!document){
+                return navigate("/not-found")
+            }
+            quill.setContents(document.data)
             quill.enable();
         })
 

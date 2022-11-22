@@ -6,7 +6,7 @@ const server = require("http").createServer(app)
 const io = require("socket.io")(server)
 const mongoose = require("mongoose")
 const path = require('path');
-const {getDocument, updateDocument} = require("./controllers/document")
+const {getDocument, updateDocument, createDocument} = require("./controllers/document")
 
 
 const PORT = process.env.PORT || 7000;
@@ -26,10 +26,14 @@ mongoose.connect(dbUrl)
 
 
 io.on("connection", socket=>{ // Step 1: connecting to client side
+    socket.on("create-document", async documentId=>{
+        const document = await createDocument(documentId);
+    })
+
     socket.on("get-document", async documentId =>{
         const document = await getDocument(documentId);
         socket.join(documentId)
-        socket.emit("load-document", document.data);           
+        socket.emit("load-document", document);           
 
         socket.on("send-changes", async (delta,data)=>{  // Step 2: Catching delta(text-changes) and data(full-document)
             socket.broadcast.to(documentId).emit("receive-changes", delta) //  and broadcast (send) it to every user who is seeing the file  

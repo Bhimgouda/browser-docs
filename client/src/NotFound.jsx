@@ -8,7 +8,7 @@ export default function NotFound() {
         <div style={{textAlign:"center", fontSize:"15px"}}>Make sure that you have the correct URL and that the file exists.</div>
         
         <div style={{margin:"20px auto",width:"400px",height:"100px",border:"2px solid grey", display:"flex", alignItems:"center", justifyContent:"center" }}>
-        <a href={`document/${uuid()}`}> Create a new Document Instead </a>
+        <a href={`/`}> Create a new Document Instead </a>
             </div>
     </React.Fragment>
   )
