@@ -78,4 +78,5 @@ body {
   cursor: pointer;
   text-decoration: underline;
   color: blue;
+  margin: 10px;
 }

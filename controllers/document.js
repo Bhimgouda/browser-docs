@@ -1,7 +1,7 @@
 const Document = require("../models/document")
 
-exports.createDocument = async (documentId)=>{
-    return await Document.create({_id:documentId, data:""})
+exports.createDocument = async ()=>{
+    return await Document.create({data:{}})
 }
 
 exports.getDocument = async (documentId)=>{
