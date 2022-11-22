@@ -1,6 +1,6 @@
 import {BrowserRouter as Router , Routes, Route, Navigate} from "react-router-dom"
-import {v4 as uuid} from "uuid"
 import TextEditor from './components/TextEditor';
+import Home from "./Home";
 import './App.css';
 
 
@@ -8,7 +8,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="*" element={<Navigate to={`/document/${uuid()}`}/>} />
+        <Route path="/" element={<Home/>} />
         <Route path="/document/:id" element={<TextEditor/>} />
       </Routes>
     </Router>
@@ -16,3 +16,5 @@ function App() {
 }
 
 export default App;
+
+//<Navigate to={`/document/${uuid()}`}/>

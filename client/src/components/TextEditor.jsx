@@ -26,7 +26,7 @@ export default function TextEditor() {
 
     // Step 1: Connecting to socket.io backend server
     useEffect(()=>{
-        const socketServer = io("http://localhost:7000")
+        const socketServer = io("")
         setSocket(socketServer)
 
         return ()=>{

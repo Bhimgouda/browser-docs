@@ -55,3 +55,24 @@ body {
     display: none;
   }
 }
+
+
+/* Home Page */
+
+
+
+.documents-display{
+  display: flex;
+  min-width: 100vw;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+.documents-display .document{
+  width: 200px;
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 0 5px 0 rgba(0, 0, 0, .5);
+}
