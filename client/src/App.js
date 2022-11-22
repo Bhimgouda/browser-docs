@@ -2,6 +2,7 @@ import {BrowserRouter as Router , Routes, Route, Navigate} from "react-router-do
 import TextEditor from './components/TextEditor';
 import Home from "./Home";
 import './App.css';
+import NotFound from "./NotFound";
 
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home/>} />
         <Route path="/document/:id" element={<TextEditor/>} />
+        <Route path="*" element={<NotFound/>} />
       </Routes>
     </Router>
   )
