@@ -55,7 +55,7 @@ export default function TextEditor() {
 
         const handler = (delta,oldData,source)=>{
             if(source!=="user") return;
-            socket.emit("send-changes", delta)
+            socket.emit("send-changes", delta, quill.getContents())
         }
 
         quill.on("text-change",handler)
