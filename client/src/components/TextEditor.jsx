@@ -2,7 +2,9 @@ import Quill from "quill"
 import "quill/dist/quill.snow.css"
 import React, { useCallback, useEffect } from 'react'
 import { useState } from "react"
+import { useParams } from "react-router-dom"
 import {io} from "socket.io-client"
+
 
 const TOOLBAR_OPTIONS = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
@@ -17,15 +19,13 @@ const TOOLBAR_OPTIONS = [
   ]
 
 export default function TextEditor() {
-
     const [socket,setSocket] = useState()
     const [quill,setQuill] = useState()
 
+    const {id:documentId} = useParams()
+
     // Step 1: Connecting to socket.io backend server
     useEffect(()=>{
-
-        
-
         const socketServer = io("http://localhost:7000")
         setSocket(socketServer)
 
@@ -33,6 +33,19 @@ export default function TextEditor() {
             socketServer.disconnect();  // RETURN IS BASICALLY USED TO DEFINE COMPONENT WILL UNMOUNT FUNCTION (for cleanup code)
         }
     },[])
+
+
+    useEffect(()=>{
+        if(socket==null||quill==null) return;
+
+        socket.emit('get-document', documentId)
+
+        socket.once('load-document',document=>{
+            quill.setContents(document);
+            quill.enable();
+        })
+
+    },[quill,socket,documentId])
 
 
     // Step 2: This useEffect is dependent on quill,socket and this listens if there was any text change on quill
@@ -83,6 +96,8 @@ export default function TextEditor() {
           modules: { toolbar: TOOLBAR_OPTIONS },
         })
         setQuill(q)
+        q.disable();
+        q.setText("Loading...")
       }, [])
 
 
