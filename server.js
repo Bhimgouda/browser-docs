@@ -8,10 +8,8 @@ const mongoose = require("mongoose")
 const path = require('path');
 const session = require("express-session");
 const MongoStore = require("connect-mongo")
-const {v4 : uuid} = require("uuid")
-const {getDocument, updateDocument, createDocument} = require("./controllers/document");
-const { createUser, addDocument } = require("./controllers/user");
-const User = require("./models/user");
+const {getDocument, updateDocument, createDocument, getUserDocuments} = require("./controllers/document");
+const { createUser, addDocument, addDocumentToUser, sendUser } = require("./controllers/user");
 
 
 const PORT = process.env.PORT || 7000;
@@ -54,41 +52,31 @@ const sessionConfig = {
 };
 app.use(session(sessionConfig));
 
-let user_id = "";
 app.use(async (req,res,next)=>{
     if(req.session == null) return;
-
     if(!req.session.user_id) {
         const {_id} = await createUser();
-        user_id = _id;
-        req.session.user_id = user_id;
+        req.session.user_id = _id
         return next()
     }
-    user_id = req.session.user_id;
     return next()
 })
+
+// App Routes
+
+app.get("/api/create-document", createDocument)
+app.get('/api/get-user-documents', getUserDocuments)
+app.get('/api/user', sendUser)
+
 
 
 
 io.on("connection", socket=>{ // Step 1: connecting to client side
-
-    socket.on("get-documents",async()=>{
-        const user = await User.findById(user_id).populate("documents");
-        socket.emit("receive-documents", user && user.documents);
-    })
-
-    socket.on("create-document", async ()=>{
-        const document = await createDocument();
-        socket.emit("created-document", document._id)
-    })
-
-    socket.on("get-document", async documentId =>{
+    socket.on("get-document", async (documentId, user_id) =>{
         const document = await getDocument(documentId);
         socket.join(documentId)
-        socket.emit("load-document", document);    
-           
-        await addDocument(user_id, document)
-
+        socket.emit("load-document", document);           
+        await addDocumentToUser(user_id, document);
         socket.on("send-changes", async (delta,data)=>{  // Step 2: Catching delta(text-changes) and data(full-document)
             socket.broadcast.to(documentId).emit("receive-changes", delta) //  and broadcast (send) it to every user who is seeing the file  
             await updateDocument(documentId,data); // saving the full data (The whole document) to DB
@@ -100,4 +88,14 @@ io.on("connection", socket=>{ // Step 1: connecting to client side
 app.use(express.static("client/build"));
 app.get("/*",(req,res)=>{
     res.sendFile(path.join(__dirname, "client", "build", "index.html"));
+})
+
+
+
+// Basic Error handler 
+
+app.use((err,req,res,next)=>{
+    console.log(err.message);
+    const { status = 500, message = "Something went wrong" } = err;
+    res.status(status).send(message);
 })

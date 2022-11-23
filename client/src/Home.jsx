@@ -2,25 +2,25 @@ import React, { useEffect } from 'react'
 import {v4 as uuid} from "uuid"
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import axios from "axios"
 
-export default function Home({socket}) {
-  const [documents,setDocuments] = useState();
+export default function Home() {
+  const [documents,setDocuments] = useState(['s','ss']);
   const navigate = useNavigate();
 
 
   useEffect(()=>{
-    if(socket == null) return;
-    socket.emit('get-documents');
-    socket.once('receive-documents', documents=>{
-      setDocuments(documents);
-    })
-  },[socket])
+    const getUserDocuments = async()=>{
+      const {data:docs} = await axios.get('api/get-user-documents');
+      setDocuments(docs);
+    }
+    getUserDocuments()
+  },[])
 
-  const createDocument = ()=>{
-    socket.emit("create-document")
-    socket.on("created-document",documentId=>{
-      navigate(`/document/${documentId}`);
-    })
+  const createDocument = async()=>{
+    const {data:document} = await axios.get("/api/create-document")
+    console.log(document._id)
+    navigate(`document/${document._id}`);
   }
 
   
@@ -29,8 +29,7 @@ export default function Home({socket}) {
             <div onClick={createDocument} className='document'>
                 Create a new Document
             </div>
-            {documents && documents.map(document=><div className='document'>{<Link to={`/document/${document._id}`}>{document._id}</Link>}</div>)}
+            {documents.map(document=><Link to={`/document/${document._id}`}><div className='document'>{document._id}</div></Link>)}
         </div>
- 
   )
 }

@@ -3,6 +3,9 @@ import "quill/dist/quill.snow.css"
 import React, { useCallback, useEffect } from 'react'
 import { useState } from "react"
 import { useNavigate, useParams } from "react-router-dom"
+import {io} from "socket.io-client"
+import axios from "axios"
+
 
 const TOOLBAR_OPTIONS = [
     [{ header: [1, 2, 3, 4, 5, 6, false] }],
@@ -16,25 +19,43 @@ const TOOLBAR_OPTIONS = [
     ["clean"],
   ]
 
-export default function TextEditor({socket}) {
+export default function TextEditor() {
+    const [socket,setSocket] = useState()
     const [quill,setQuill] = useState()
+    const [user_id,setUser_id] = useState()
+    const navigate = useNavigate();
     const {id:documentId} = useParams()
-    const navigate = useNavigate()
+
+    // Step 1: Connecting to socket.io backend server and appending the docs to the user that it got from browser cookies
+    useEffect(()=>{
+        const socketServer = io("")
+        setSocket(socketServer)
+
+        const getUser = async()=>{
+            const {data:u_id} = await axios.get('/api/user');
+            setUser_id(u_id);
+        }
+
+        getUser();
+
+        return ()=>{
+            socketServer.disconnect();  // RETURN IS BASICALLY USED TO DEFINE COMPONENT WILL UNMOUNT FUNCTION (for cleanup code)
+        }
+    },[])
+
 
     useEffect(()=>{
-        if(socket==null || socket === undefined || quill==null) return;
+        if(socket==null||quill==null||user_id==null) return;
 
-        socket.emit('get-document', documentId)
+        socket.emit('get-document', documentId, user_id)
 
         socket.once('load-document',document=>{
-            if(!document){
-                return navigate("/not-found")
-            }
-            quill.setContents(document.data)
+            if(!document) return navigate("/not-found"); 
+            quill.setContents(document.data);
             quill.enable();
         })
 
-    },[quill,socket,documentId])
+    },[quill,socket,documentId, user_id])
 
 
     // Step 2: This useEffect is dependent on quill,socket and this listens if there was any text change on quill
